@@ -1,0 +1,7 @@
+{
+  "name": "Fridge",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
