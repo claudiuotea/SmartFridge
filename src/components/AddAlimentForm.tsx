@@ -16,15 +16,19 @@ import {
   IonAlert,
 } from "@ionic/react";
 import { alertSharp, addOutline } from "ionicons/icons";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
+import { AuthContext } from "../auth/AuthProvider";
 import { getLogger } from "../core";
 import { useAliments } from "../custom hooks/useAliments";
+import { ItemContext } from "../custom hooks/useFridgeItems";
 import { FridgeAlimentInterface } from "../interfaces/addToFridgeInterface";
 import { FridgeItemInterface } from "../interfaces/FridgeItemInterface";
 
 const log = getLogger("AddAlimentForm");
 
-export const AddForm: React.FC<{addToFridge:(item:FridgeAlimentInterface) => void}> = (props) => {
+export const AddForm: React.FC = () => {
+  const {addToFridge} = useContext(ItemContext);
+  const {jwt} = useContext(AuthContext);
   const { aliments, fetchingAliments, fetchingAlimentsError } = useAliments();
   const [typeAliment, setTypeAliment] = useState<string>("");
   const [quantity,setQuantity] = useState<string|null|undefined>("0");
@@ -35,11 +39,11 @@ export const AddForm: React.FC<{addToFridge:(item:FridgeAlimentInterface) => voi
 function checkUserInput(){
   if(typeAliment === undefined || typeAliment ===null || quantity===null || quantity == undefined || typeAliment ===""||+quantity < 1)
   {setFailedToAdd(true);
-    log("Beton");
+    log("failed to add in checkUserInput")
   return;}
   else{
     setFailedToAdd(false);
-    props.addToFridge({type:typeAliment,quantity:quantity});
+    addToFridge?.({type:typeAliment,quantity:quantity},jwt);
   }
 }
 function clearError(){

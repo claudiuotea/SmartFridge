@@ -38,7 +38,7 @@ import { AddForm } from "./AddAlimentForm";
 const log = getLogger("FridgeList");
 
 export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
-  const { items, fetching, fetchingError, addToFridge } = useContext(
+  const { items, fetching, fetchingError} = useContext(
     ItemContext
   );
 
@@ -83,7 +83,7 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
             ))}
           </IonList>
         )}
-        <AddForm addToFridge={addToFridge}/>
+        <AddForm/>
         
       </IonContent>
     </IonPage>

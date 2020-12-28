@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { getLogger } from "../core";
 import { FridgeItemInterface } from "../interfaces/FridgeItemInterface";
 import { addItem, getItems, removeItem } from "../utils/fridgeItemApi";
@@ -8,53 +8,73 @@ import { AuthContext } from "../auth/AuthProvider";
 
 const log = getLogger("useFridgeItems");
 
-//punem intr-un context itemele
-export const ItemContext = React.createContext<FridgeItemState>({
-  fetching: false,
-  addToFridge: () => log("Add to fridge function"),
-  removeFromFridge: () => log("remove from fridge function"),
-});
-
 interface ItemProviderProps {
   children: PropTypes.ReactNodeLike;
 }
+
+type addToFridgeFn = (item: FridgeAlimentInterface,jwt:string) => void;
+type removeFromFridgeFn = (id: string,jwt:string) => void;
 
 //ca sa pot returna tot ce am nevoie in componenta care tine lista de elemente
 export interface FridgeItemState {
   items?: FridgeItemInterface[];
   fetching: boolean;
   fetchingError?: Error;
-  addToFridge: (item: FridgeAlimentInterface) => void;
-  removeFromFridge: (id: string) => void;
+  addToFridge?: addToFridgeFn;
+  removeFromFridge?: removeFromFridgeFn;
 }
 
+const initialState: FridgeItemState = {
+  fetching: false,
+};
+
+//punem intr-un context itemele
+export const ItemContext = React.createContext<FridgeItemState>(initialState);
 
 //hook-ul asta va returna itemele si va apela functia de request
 export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
   //iau din context jwt ca sa il pot adauga requesturilor
-  const { jwt,isAuthenticated } = useContext(AuthContext);
-  log('Token ' + jwt);
+  const { jwt, isAuthenticated } = useContext(AuthContext);
+  const [state, setState] = useState<FridgeItemState>(initialState);
   //folosit ca sa fac un nou fetch cand adaug sau modific ceva din frigider
   const [needToFetch, setNeedToFetch] = useState<Boolean>(false);
-  //add function, it will be used to add,update or increase/decrease quantity
-  const addToFridgee = (item: FridgeAlimentInterface) => {
-    log("addToFridgee");
-    addFct(item);
-  };
 
-  async function addFct(item: FridgeAlimentInterface) {
-    log("Await to add in rest service --addFct");
+  const {
+    fetching,
+    fetchingError,
+    items,
+  } = state;
+  useEffect(getItemsEffect, [needToFetch, isAuthenticated]);
+  
+
+  //callbacks for async fc
+    //add function, it will be used to add,update or increase/decrease quantity
+  const addToFridge = useCallback<addToFridgeFn>(addToFridgeCallback, []);
+  const removeFromFridge = useCallback<removeFromFridgeFn>(
+    removeFromFridgeCallback,
+    []
+  );
+
+  const value = {
+    fetching,
+    addToFridge,
+    fetchingError,
+    items,
+    removeFromFridge,
+  };
+  //creez un context cu care voi face wrap aplicatiei. Partea cu {children} e ca sa permit sa am noduri in interiorul contextului meu
+  return <ItemContext.Provider value={value}>{children}</ItemContext.Provider>;
+
+  async function addToFridgeCallback(item: FridgeAlimentInterface,jwt:string) {
     try {
-      const added = await addItem(item, jwt);
+      await addItem(item, jwt);
       setNeedToFetch(true);
     } catch (error) {
       log("Error on adding item");
-      return false;
     }
   }
 
-  //remove one item
-  const removeFromFridge = (id: string) => {
+  async function removeFromFridgeCallback(id: string,jwt:string) {
     log("removeFromFridge " + id);
     try {
       removeItem(id, jwt);
@@ -62,28 +82,12 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
     } catch (error) {
       log("Error on removing item");
     }
-  };
-
-  const [state, setState] = useState<FridgeItemState>({
-    items: undefined, //pot lipsi
-    fetching: false,
-    fetchingError: undefined,
-    addToFridge: addToFridgee,
-    removeFromFridge: removeFromFridge,
-  });
-
-  //destructuring
-  const { items, fetching, fetchingError, addToFridge } = state;
-
-  useEffect(getItemsEffect, [needToFetch,isAuthenticated]);
-  //creez un context cu care voi face wrap aplicatiei. Partea cu {children} e ca sa permit sa am noduri in interiorul contextului meu
-  return <ItemContext.Provider value={state}>{children}</ItemContext.Provider>;
+  }
 
   //apeleaza server-ul si aduce datele
   function getItemsEffect() {
     //add function
-    if(!isAuthenticated)
-    return;
+    if (!isAuthenticated) return;
     let canceled = false;
     fetchItems();
     return () => {
@@ -96,8 +100,7 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
         log("fetch items started");
         setState({ ...state, fetching: true });
         const items = await getItems(jwt);
-        
-       
+
         log("fetch items succeded");
         if (!canceled) setState({ ...state, items, fetching: false });
       } catch (error) {

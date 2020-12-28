@@ -63,7 +63,9 @@ export const removeItem:(id:string,jwt:string) =>Promise<any> = (id,jwt)=>{
   return axios
     .delete(`${baseUrl}/fridge/${id}`,config)
     .then((res) => {
+      log("Item removed succesfully");
       return Promise.resolve(res.data);
+      
     })
     .catch((err) => {
       log("Cannot remove item from fridge");

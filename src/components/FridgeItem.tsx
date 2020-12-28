@@ -24,6 +24,7 @@ import { getLogger } from "../core";
 import { FridgeItemState, ItemContext } from "../custom hooks/useFridgeItems";
 import { FridgeItemInterface } from "../interfaces/FridgeItemInterface";
 import { addOutline, removeOutline } from "ionicons/icons";
+import { AuthContext } from "../auth/AuthProvider";
 
 const log = getLogger("FridgeItem");
 
@@ -32,16 +33,17 @@ interface FridgeItem extends RouteComponentProps<{ id: string }> {}
 
 export const FridgeItem: React.FC<FridgeItem> = ({ match,history }) => {
   const { items, fetching, fetchingError,removeFromFridge ,addToFridge} = useContext(ItemContext);
+  const {jwt} = useContext(AuthContext);
   const [item, setItem] = useState<FridgeItemInterface>();
   const [showAlert,setShowAlert] = useState<boolean>(false);
   function removeClicked(id:string){
       history.goBack();
-      removeFromFridge(id);
+      removeFromFridge?.(id,jwt);
   }
 
   function addClicked(item:FridgeItemInterface){
     let newQuantity:string = (item.quantity + 1).toString();
-    addToFridge({type:item.type,quantity:newQuantity});
+    addToFridge?.({type:item.type,quantity:newQuantity},jwt);
   }
   function substractClicked(item:FridgeItemInterface)
   {
@@ -52,7 +54,7 @@ export const FridgeItem: React.FC<FridgeItem> = ({ match,history }) => {
     }
     setShowAlert(false);
     let newQuantity:string = (item.quantity - 1).toString();
-    addToFridge({type:item.type,quantity:newQuantity});
+    addToFridge?.({type:item.type,quantity:newQuantity},jwt);
   }
   useEffect(() => {
     const item = items?.find((x:FridgeItemInterface) => x.id === +match.params.id!);
