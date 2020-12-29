@@ -1,3 +1,4 @@
+import { Plugins } from "@capacitor/core";
 import {
   IonBackButton,
   IonButton,
@@ -28,7 +29,8 @@ import {
 } from "@ionic/react";
 import { addOutline, alertSharp, image } from "ionicons/icons";
 import React, { useContext, useState } from "react";
-import { RouteComponentProps } from "react-router";
+import { Redirect, RouteComponentProps } from "react-router";
+import { AuthContext } from "../auth/AuthProvider";
 import { getLogger } from "../core";
 import { useAliments } from "../custom hooks/useAliments";
 import { ItemContext } from "../custom hooks/useFridgeItems";
@@ -41,7 +43,16 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
   const { items, fetching, fetchingError} = useContext(
     ItemContext
   );
-
+  const {logout} =useContext(AuthContext);
+  
+  
+  //sterge storage-ul + modifica isAuthenticated si JWT din memorie
+  const logoutFn = () =>{
+    const {Storage} = Plugins;
+    Storage.clear();
+    logout?.();
+    history.push("/login");
+  }
   return (
     <IonPage>
       <IonHeader>
@@ -84,8 +95,12 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
           </IonList>
         )}
         <AddForm/>
-        
-      </IonContent>
+        <IonFab vertical="bottom" horizontal="center">
+              <IonButton onClick={logoutFn} expand="full" color="dark">
+                Logout
+              </IonButton>
+              </IonFab>
+        </IonContent>
     </IonPage>
   );
 };

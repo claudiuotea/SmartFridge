@@ -6,7 +6,7 @@ import { ReturnAddInterface } from "../interfaces/ReturnAddInterface";
 
 const baseUrl = "http://localhost:8080";
 const log = getLogger("fridgeItemApi");
-export const getItems: (jwt:string) => Promise<FridgeItemInterface[]> = (jwt) => {
+export const getItems: (jwt:string,id:string) => Promise<FridgeItemInterface[]> = (jwt,id) => {
   let config = {
     headers: {
       "Content-Type": "application/json",
@@ -17,7 +17,7 @@ export const getItems: (jwt:string) => Promise<FridgeItemInterface[]> = (jwt) =>
   log("call for fridge items started");
   
   return axios
-    .get(`${baseUrl}/fridge`,config)
+    .get(`${baseUrl}/fridge/${id}`,config)
     .then((res) => {
       log("get fridge items succeded");
       return Promise.resolve(res.data);
@@ -38,7 +38,7 @@ export const addItem: (
       "Authorization": `Bearer ${jwt}`
     },
   };
-  log("JWT  "  +jwt);
+  log("itemul " +  item.userId + " " + item.type + " " + item.quantity)
   log("Post an aliment to api");
   return axios
     .post(`${baseUrl}/fridge`, item,config)
@@ -51,7 +51,7 @@ export const addItem: (
     });
 };
 
-export const removeItem:(id:string,jwt:string) =>Promise<any> = (id,jwt)=>{
+export const removeItem:(idUser:string,id:string,jwt:string) =>Promise<any> = (idUser,id,jwt)=>{
   log("Remove an aliment from api");
   let config = {
     headers: {
@@ -61,7 +61,7 @@ export const removeItem:(id:string,jwt:string) =>Promise<any> = (id,jwt)=>{
   };
 
   return axios
-    .delete(`${baseUrl}/fridge/${id}`,config)
+    .delete(`${baseUrl}/fridge/${idUser}/${id}`,config)
     .then((res) => {
       log("Item removed succesfully");
       return Promise.resolve(res.data);

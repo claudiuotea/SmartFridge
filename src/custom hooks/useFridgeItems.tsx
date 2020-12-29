@@ -5,6 +5,7 @@ import { addItem, getItems, removeItem } from "../utils/fridgeItemApi";
 import PropTypes from "prop-types";
 import { FridgeAlimentInterface } from "../interfaces/addToFridgeInterface";
 import { AuthContext } from "../auth/AuthProvider";
+import { Plugins } from "@capacitor/core";
 
 const log = getLogger("useFridgeItems");
 
@@ -38,7 +39,7 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
   const [state, setState] = useState<FridgeItemState>(initialState);
   //folosit ca sa fac un nou fetch cand adaug sau modific ceva din frigider
   const [needToFetch, setNeedToFetch] = useState<Boolean>(false);
-
+  const {Storage} = Plugins;
   const {
     fetching,
     fetchingError,
@@ -67,7 +68,12 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
 
   async function addToFridgeCallback(item: FridgeAlimentInterface,jwt:string) {
     try {
-      await addItem(item, jwt);
+
+      //localstorage
+      let token = await (await Storage.get({key:'jwt'})).value
+      let id = await (await Storage.get({key:'id'})).value
+      item.userId = id!;
+      await addItem(item, token!);
       setNeedToFetch(true);
     } catch (error) {
       log("Error on adding item");
@@ -77,7 +83,11 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
   async function removeFromFridgeCallback(id: string,jwt:string) {
     log("removeFromFridge " + id);
     try {
-      removeItem(id, jwt);
+      //localstorage
+      let token = await (await Storage.get({key:'jwt'})).value
+      let idUser = await (await Storage.get({key:'id'})).value
+      log("remove id " + idUser);
+      removeItem(idUser!,id,token!);
       setNeedToFetch(true);
     } catch (error) {
       log("Error on removing item");
@@ -99,7 +109,12 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
       try {
         log("fetch items started");
         setState({ ...state, fetching: true });
-        const items = await getItems(jwt);
+        //localstorage
+      let token = await (await Storage.get({key:'jwt'})).value
+      let id = await (await Storage.get({key:'id'})).value
+      
+      log("Id user " + id);
+        const items = await getItems(token!,id!);
 
         log("fetch items succeded");
         if (!canceled) setState({ ...state, items, fetching: false });

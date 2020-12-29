@@ -7,6 +7,7 @@ const authUrl = `http://localhost:8080/user/login`;
 //asta va returna autentificarea daca e success
 export interface AuthProps {
   jwt: string;
+  idUser:string;
 }
 
 export const loginApi: (

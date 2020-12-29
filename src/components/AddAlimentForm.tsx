@@ -1,3 +1,4 @@
+import { Plugins } from "@capacitor/core";
 import {
   IonLoading,
   IonCard,
@@ -16,7 +17,7 @@ import {
   IonAlert,
 } from "@ionic/react";
 import { alertSharp, addOutline } from "ionicons/icons";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../auth/AuthProvider";
 import { getLogger } from "../core";
 import { useAliments } from "../custom hooks/useAliments";
@@ -33,17 +34,21 @@ export const AddForm: React.FC = () => {
   const [typeAliment, setTypeAliment] = useState<string>("");
   const [quantity,setQuantity] = useState<string|null|undefined>("0");
   const [failedToAdd,setFailedToAdd] = useState<boolean>(false);
+
   log("render fridge list");
 
 //check if the input from the user is valid and if yes, continue
 function checkUserInput(){
+  
   if(typeAliment === undefined || typeAliment ===null || quantity===null || quantity == undefined || typeAliment ===""||+quantity < 1)
   {setFailedToAdd(true);
     log("failed to add in checkUserInput")
   return;}
   else{
     setFailedToAdd(false);
-    addToFridge?.({type:typeAliment,quantity:quantity},jwt);
+    addToFridge?.({userId:'',type:typeAliment,quantity:quantity},jwt);
+    
+    
   }
 }
 function clearError(){

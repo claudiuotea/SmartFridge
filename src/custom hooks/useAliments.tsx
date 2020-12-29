@@ -1,5 +1,6 @@
 //hook-ul asta va returna toate alimentele posibile pentru a fi adaugate in frigider
 
+import { Plugins } from "@capacitor/core";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../auth/AuthProvider";
 import { getLogger } from "../core";
@@ -22,7 +23,11 @@ export const useAliments = () => {
   });
 
   //iau din context jwt ca sa il pot adauga requesturilor
-  const {jwt} = useContext(AuthContext);
+  //const {jwt} = useContext(AuthContext);
+  //preiau jwt direct din local storage
+  const {Storage} = Plugins;
+
+
   //destructuring
   const { aliments, fetchingAliments, fetchingAlimentsError } = state;
   useEffect(getAlimentsEffect, []);
@@ -39,10 +44,12 @@ export const useAliments = () => {
     };
 
     async function fetchAliments() {
+      //I used jwt from local Storage here
+      let jwt = (await Storage.get({key:'jwt'})).value;
       try {
         log("fetch aliments started");
         setState({ ...state, fetchingAliments: true });
-        const aliments = await getAliments(jwt);
+        const aliments = await getAliments(jwt!);
         log("fetch aliments succeded");
         if (!canceled)
           setState({ ...state, aliments, fetchingAliments: false });
