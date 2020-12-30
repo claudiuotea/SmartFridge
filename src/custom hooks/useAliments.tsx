@@ -50,13 +50,22 @@ export const useAliments = () => {
         log("fetch aliments started");
         setState({ ...state, fetchingAliments: true });
         const aliments = await getAliments(jwt!);
+
+        //save them in local storage
+        Storage.set({key:'aliments',value:JSON.stringify(aliments)});
+
+
         log("fetch aliments succeded");
         if (!canceled)
           setState({ ...state, aliments, fetchingAliments: false });
       } catch (error) {
         log("fetch failed");
+        //daca avem eroare la fetch, preluam totusi itemele din local storage
+        let aliments = await (await Storage.get({key:'aliments'})).value;
+        const choice:FridgeItemInterface[] = aliments? JSON.parse(aliments):[];
         setState({
           ...state,
+          aliments:choice,
           fetchingAlimentsError: error,
           fetchingAliments: false,
         });

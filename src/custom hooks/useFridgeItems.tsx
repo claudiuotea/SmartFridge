@@ -23,10 +23,12 @@ export interface FridgeItemState {
   fetchingError?: Error;
   addToFridge?: addToFridgeFn;
   removeFromFridge?: removeFromFridgeFn;
+  workingLocal:boolean;
 }
 
 const initialState: FridgeItemState = {
   fetching: false,
+  workingLocal:false
 };
 
 //punem intr-un context itemele
@@ -44,6 +46,7 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
     fetching,
     fetchingError,
     items,
+    workingLocal
   } = state;
   useEffect(getItemsEffect, [needToFetch, isAuthenticated]);
   
@@ -62,6 +65,7 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
     fetchingError,
     items,
     removeFromFridge,
+    workingLocal
   };
   //creez un context cu care voi face wrap aplicatiei. Partea cu {children} e ca sa permit sa am noduri in interiorul contextului meu
   return <ItemContext.Provider value={value}>{children}</ItemContext.Provider>;
@@ -117,10 +121,18 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
         const items = await getItems(token!,id!);
 
         log("fetch items succeded");
-        if (!canceled) setState({ ...state, items, fetching: false });
+        if (!canceled) {
+          //le adaugam si in local storage, daca nu avem conectivitate sa putem lucra cu local
+          Storage.set({key:'fridgeItems',value:JSON.stringify(items)})
+
+          setState({ ...state, items, fetching: false,workingLocal:false });
+        }
       } catch (error) {
         log("fetch failed");
-        setState({ ...state, fetchingError: error, fetching: false });
+        //daca avem eroare la fetch, preluam totusi itemele din local storage
+        let fridgeItems = await (await Storage.get({key:'fridgeItems'})).value;
+        const choice:FridgeItemInterface[] = fridgeItems? JSON.parse(fridgeItems):[];
+        setState({ ...state,items:choice, fetchingError: error, fetching: false ,workingLocal:true});
       }
     }
 

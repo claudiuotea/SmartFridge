@@ -20,6 +20,7 @@ import {
   IonLoading,
   IonPage,
   IonRow,
+  IonSearchbar,
   IonSelect,
   IonSelectOption,
   IonText,
@@ -40,19 +41,20 @@ import { AddForm } from "./AddAlimentForm";
 const log = getLogger("FridgeList");
 
 export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
-  const { items, fetching, fetchingError} = useContext(
+  const { items, fetching, fetchingError, workingLocal } = useContext(
     ItemContext
   );
-  const {logout} =useContext(AuthContext);
-  
-  
+
+  const [searchString, setSearchString] = useState<string>("");
+  const { logout } = useContext(AuthContext);
+
   //sterge storage-ul + modifica isAuthenticated si JWT din memorie
-  const logoutFn = () =>{
-    const {Storage} = Plugins;
+  const logoutFn = () => {
+    const { Storage } = Plugins;
     Storage.clear();
     logout?.();
     history.push("/login");
-  }
+  };
   return (
     <IonPage>
       <IonHeader>
@@ -60,25 +62,18 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
           <IonTitle className="ion-text-center ion-no-border">
             What's in my fridge?
           </IonTitle>
-        </IonToolbar>
+        </IonToolbar>  
       </IonHeader>
       <IonContent>
         <IonLoading
           isOpen={fetching}
           message="Please wait,getting data from the server!"
         />
-        {fetchingError && (
-          <IonCard>
-            <IonItem>
-              <IonIcon icon={alertSharp} slot="start" />
-              <IonLabel>Communication error</IonLabel>
-            </IonItem>
-            <IonCardContent>{fetchingError.message}</IonCardContent>
-          </IonCard>
-        )}
+<IonSearchbar  value={searchString} onIonChange={(e) => setSearchString(e.detail.value!) } debounce={500}></IonSearchbar>
+        {/**Filtrarea se face direct cand se afiseaza itemele */}
         {items && (
           <IonList className="ion-padding">
-            {items.map((x: FridgeItemInterface) => (
+            {items.filter(x=>x.type.toLowerCase().indexOf(searchString.toLowerCase()) >= 0).map((x: FridgeItemInterface) => (
               <IonItem key={x.id} onClick={() => history.push(`/list/${x.id}`)}>
                 <IonThumbnail slot="start">
                   <IonImg src={x.url_img} />
@@ -94,13 +89,28 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
             ))}
           </IonList>
         )}
-        <AddForm/>
+        {fetchingError && (
+          <IonCard>
+            <IonItem>
+              <IonIcon icon={alertSharp} slot="start" />
+              <IonLabel>Communication error</IonLabel>
+            </IonItem>
+            <IonCardContent>{fetchingError.message}</IonCardContent>
+          </IonCard>
+        )}
+        <AddForm />
+        {workingLocal && (
+          <h2 className="ion-text-center">
+            No connection, working on local storage. To modify or add an item
+            please connect to internet!
+          </h2>
+        )}
         <IonFab vertical="bottom" horizontal="center">
-              <IonButton onClick={logoutFn} expand="full" color="dark">
-                Logout
-              </IonButton>
-              </IonFab>
-        </IonContent>
+          <IonButton onClick={logoutFn} expand="full" color="dark">
+            Logout
+          </IonButton>
+        </IonFab>
+      </IonContent>
     </IonPage>
   );
 };
