@@ -28,7 +28,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import { addOutline, alertSharp, image } from "ionicons/icons";
+import { alertOutline,addOutline, alertSharp, image } from "ionicons/icons";
 import React, { useContext, useState } from "react";
 import { Redirect, RouteComponentProps } from "react-router";
 import { AuthContext } from "../auth/AuthProvider";
@@ -37,14 +37,15 @@ import { useAliments } from "../custom hooks/useAliments";
 import { ItemContext } from "../custom hooks/useFridgeItems";
 import { FridgeItemInterface } from "../interfaces/FridgeItemInterface";
 import { AddForm } from "./AddAlimentForm";
-
+import { useNetwork } from "../custom hooks/useNetwork";
 const log = getLogger("FridgeList");
 
 export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
   const { items, fetching, fetchingError, workingLocal } = useContext(
     ItemContext
   );
-
+  //Starea conectivitatii la internet
+  const { networkStatus } = useNetwork();
   const [searchString, setSearchString] = useState<string>("");
   const { logout } = useContext(AuthContext);
 
@@ -62,31 +63,45 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
           <IonTitle className="ion-text-center ion-no-border">
             What's in my fridge?
           </IonTitle>
-        </IonToolbar>  
+          {networkStatus.connected ? <>Status:connected</>:<>Status: no network</>}
+        </IonToolbar>
       </IonHeader>
       <IonContent>
         <IonLoading
           isOpen={fetching}
           message="Please wait,getting data from the server!"
         />
-<IonSearchbar  value={searchString} onIonChange={(e) => setSearchString(e.detail.value!) } debounce={500}></IonSearchbar>
+        <IonSearchbar
+          value={searchString}
+          onIonChange={(e) => setSearchString(e.detail.value!)}
+          debounce={500}
+        ></IonSearchbar>
         {/**Filtrarea se face direct cand se afiseaza itemele */}
         {items && (
           <IonList className="ion-padding">
-            {items.filter(x=>x.type.toLowerCase().indexOf(searchString.toLowerCase()) >= 0).map((x: FridgeItemInterface) => (
-              <IonItem key={x.id} onClick={() => history.push(`/list/${x.id}`)}>
-                <IonThumbnail slot="start">
-                  <IonImg src={x.url_img} />
-                </IonThumbnail>
-                {x.type}
-                <IonItem slot="end" lines="none">
-                  Quantity:
-                  <IonButton fill="outline" color="dark">
-                    {x.quantity}
-                  </IonButton>
+            {items
+              .filter(
+                (x) =>
+                  x.type.toLowerCase().indexOf(searchString.toLowerCase()) >= 0
+              )
+              .map((x: FridgeItemInterface) => (
+                <IonItem
+                  key={x.id}
+                  onClick={() => history.push(`/list/${x.id}`)}
+                >
+                  <IonThumbnail slot="start">
+                    <IonImg src={x.url_img} />
+                  </IonThumbnail>
+                  {x.type}
+                  <IonItem slot="end" lines="none">
+                    Quantity:
+                    <IonButton fill="outline" color="dark">
+                      {x.quantity}
+                    </IonButton>
+                    {x.id==-1&&<IonIcon icon={alertOutline}></IonIcon>}
+                  </IonItem>
                 </IonItem>
-              </IonItem>
-            ))}
+              ))}
           </IonList>
         )}
         {fetchingError && (
