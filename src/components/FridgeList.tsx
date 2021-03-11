@@ -28,7 +28,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import { alertOutline,addOutline, alertSharp, image } from "ionicons/icons";
+import { alertOutline, addOutline, alertSharp, image } from "ionicons/icons";
 import React, { useContext, useState } from "react";
 import { Redirect, RouteComponentProps } from "react-router";
 import { AuthContext } from "../auth/AuthProvider";
@@ -44,6 +44,7 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
   const { items, fetching, fetchingError, workingLocal } = useContext(
     ItemContext
   );
+
   //Starea conectivitatii la internet
   const { networkStatus } = useNetwork();
   const [searchString, setSearchString] = useState<string>("");
@@ -63,7 +64,11 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
           <IonTitle className="ion-text-center ion-no-border">
             What's in my fridge?
           </IonTitle>
-          {networkStatus.connected ? <>Status:connected</>:<>Status: no network</>}
+          {networkStatus.connected ? (
+            <>Status:connected</>
+          ) : (
+            <>Status: no network</>
+          )}
         </IonToolbar>
       </IonHeader>
       <IonContent>
@@ -98,7 +103,7 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
                     <IonButton fill="outline" color="dark">
                       {x.quantity}
                     </IonButton>
-                    {x.id==-1&&<IonIcon icon={alertOutline}></IonIcon>}
+                    {x.id == -1 && <IonIcon icon={alertOutline}></IonIcon>}
                   </IonItem>
                 </IonItem>
               ))}
@@ -120,6 +125,11 @@ export const FridgeList: React.FC<RouteComponentProps> = ({ history }) => {
             please connect to internet!
           </h2>
         )}
+        <div className="ion-text-center">
+          <IonButton onClick={() => history.push(`/foods`)} color="dark">
+            Gallery
+          </IonButton>
+        </div>
         <IonFab vertical="bottom" horizontal="center">
           <IonButton onClick={logoutFn} expand="full" color="dark">
             Logout

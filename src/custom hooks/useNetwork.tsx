@@ -46,15 +46,17 @@ export const useNetwork = () => {
       if (!canceled) {
         setNetworkStatus(status);
         //background task pentru APLICATII MOBILE
+        
         // let taskId = BackgroundTask.beforeExit(async () => {
         //   console.log('useBackgroundTask - executeTask started');
         //   await handleAddCalls();
         //   console.log('useBackgroundTask - executeTask finished');
         //   BackgroundTask.finish({ taskId });
         // });
+        
         handleAddCalls(); //Pentru WEB!
       }
     }
   }, []);
   return { networkStatus };
-};
+}; 

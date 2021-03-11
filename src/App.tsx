@@ -27,6 +27,7 @@ import { FridgeItem } from "./components/FridgeItem";
 import { AuthProvider } from "./auth/AuthProvider";
 import { Login } from "./auth/Login";
 import { PrivateRoute } from "./auth/PrivateRoute";
+import { FoodPictures } from "./components/FoodPictures";
 
 const App: React.FC = () => (
   <IonApp>
@@ -36,6 +37,7 @@ const App: React.FC = () => (
           <Route path="/login" component={Login} exact={true} />
           <ItemProvider>
             <PrivateRoute path="/list" component={FridgeList} exact={true} />
+            <PrivateRoute path="/foods" component={FoodPictures} exact={true}/>
             <PrivateRoute
               path="/list/:id"
               component={FridgeItem}
